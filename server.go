@@ -10,6 +10,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"github.com/kavu/go_reuseport"
 )
 
 // Maximum number of TCP queries before we close the socket.
@@ -321,14 +322,8 @@ func (srv *Server) ListenAndServe() error {
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		a, err := net.ResolveTCPAddr(srv.Net, addr)
-		if err != nil {
-			return err
-		}
-		l, err := net.ListenTCP(srv.Net, a)
-		if err != nil {
-			return err
-		}
+		l, err := reuseport.Listen(srv.Net, addr)
+
 		srv.Listener = l
 		srv.started = true
 		srv.lock.Unlock()
@@ -354,14 +349,9 @@ func (srv *Server) ListenAndServe() error {
 		srv.lock.Lock() // to satisfy the defer at the top
 		return err
 	case "udp", "udp4", "udp6":
-		a, err := net.ResolveUDPAddr(srv.Net, addr)
-		if err != nil {
-			return err
-		}
-		l, err := net.ListenUDP(srv.Net, a)
-		if err != nil {
-			return err
-		}
+		ll, err := reuseport.NewReusablePortPacketConn(srv.Net, addr)
+		l := ll.(*net.UDPConn)
+
 		if e := setUDPSocketOptions(l); e != nil {
 			return e
 		}
