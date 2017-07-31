@@ -118,7 +118,7 @@ func ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, err error) 
 //	co.Close()
 //
 func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
-	println("dns: this function is deprecated")
+	//println("dns: this function is deprecated")
 	co := new(Conn)
 	co.Conn = c
 	if err = co.WriteMsg(m); err != nil {
